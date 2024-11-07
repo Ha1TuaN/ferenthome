@@ -4,10 +4,11 @@ import { CloseOutlined, UploadOutlined } from '@ant-design/icons';
 import { Form, Input, Spin, Select, Modal, InputNumber, Button, Upload, Card } from 'antd';
 import { toast } from 'react-toastify';
 import _ from 'lodash';
-import { setModalVisible } from '../store/reducers/modalReducer';
-import { API_URL, requestPOST } from '../services/baseAPI';
+import { setModalVisible, setRandom } from '../store/reducers/modalReducer';
+import { API_URL, requestPOST, requestPUT } from '../services/baseAPI';
 
 import ImageUpload from './ImageUpload';
+import { convertImage } from '../ultils/Common/handleImage';
 
 const FormItem = Form.Item;
 
@@ -102,23 +103,24 @@ const ModalItem = (props) => {
             if (id) {
                 formData.id = id;
             }
-            //console.log(handleImage(file));
-            // const res = id
-            //     ? await requestPUT_NEW(`api/v1/profileworkexperiences/${id}`, formData)
-            //     : await requestPOST_NEW(`api/v1/profileworkexperiences`, formData);
-            // if (res.status === 200) {
-            //     toast.success('Cập nhật thành công!');
-            //     dispatch(actionsModal.setRandom());
-            //     handleCancel();
-            // } else {
-            //     //toast.error('Thất bại, vui lòng thử lại!');
-            //     const errors = Object.values(res?.data?.errors ?? {});
-            //     let final_arr = [];
-            //     errors.forEach((item) => {
-            //         final_arr = _.concat(final_arr, item);
-            //     });
-            //     toast.error('Thất bại, vui lòng thử lại! ' + final_arr.join(' '));
-            // }
+            formData.imageHouses = convertImage(file);
+            console.log(formData);
+            const res = id
+                ? await requestPUT(`api/v1/motels/${id}`, formData)
+                : await requestPOST(`api/v1/motels`, formData);
+            if (res.status === 200) {
+                toast.success('Cập nhật thành công!');
+                dispatch(setRandom());
+                handleCancel();
+            } else {
+                //toast.error('Thất bại, vui lòng thử lại!');
+                const errors = Object.values(res?.data?.errors ?? {});
+                let final_arr = [];
+                errors.forEach((item) => {
+                    final_arr = _.concat(final_arr, item);
+                });
+                toast.error('Thất bại, vui lòng thử lại! ' + final_arr.join(' '));
+            }
         } catch (errorInfo) {
             console.log('Failed:', errorInfo);
         }
@@ -154,7 +156,7 @@ const ModalItem = (props) => {
                                     <TextArea placeholder="" />
                                 </FormItem>
                             </div>
-                            <div className="col-xl-4 col-lg-4">
+                            <div className="col-xl-6 col-lg-6">
                                 <FormItem label="Tỉnh/Thành phố" name="provinces">
                                     <Select
                                         showSearch
@@ -184,7 +186,7 @@ const ModalItem = (props) => {
                                     />
                                 </FormItem>
                             </div>
-                            <div className="col-xl-4 col-lg-4">
+                            <div className="col-xl-6 col-lg-6">
                                 <FormItem label="Quận/Huyện" name="districts">
                                     <Select
                                         showSearch
@@ -212,38 +214,13 @@ const ModalItem = (props) => {
                                     />
                                 </FormItem>
                             </div>
-                            <div className="col-xl-4 col-lg-4">
-                                <FormItem label="Phường/Xã" name="communes">
-                                    <Select
-                                        showSearch
-                                        placeholder=""
-                                        allowClear
-                                        filterOption={(input, option) =>
-                                            (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                                        }
-                                        style={{ width: '100%' }}
-                                        options={communes.map((item) => ({
-                                            ...item,
-                                            value: item.id,
-                                            label: item.name,
-                                        }))}
-                                        onChange={(value, current) => {
-                                            if (value) {
-                                                console.log(current);
-                                                form.setFieldValue('wardId', current.id);
-                                            } else {
-                                                form.setFieldValue('wardId', null);
-                                            }
-                                        }}
-                                    />
-                                </FormItem>
-                            </div>
-                            <div className="col-xl-8 col-lg-8">
+
+                            <div className="col-xl-12 col-lg-12">
                                 <FormItem label="Địa chỉ" name="address">
                                     <Input />
                                 </FormItem>
                             </div>
-                            <div className="col-xl-4 col-lg-4">
+                            <div className="col-xl-6 col-lg-6">
                                 <FormItem label="Giá" name="price">
                                     <InputNumber
                                         formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
@@ -253,25 +230,7 @@ const ModalItem = (props) => {
                                     />
                                 </FormItem>
                             </div>
-                            <div className="col-xl-4 col-lg-4">
-                                <FormItem label="Số lượng phòng ngủ" name="numberBedroom">
-                                    <InputNumber
-                                        formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                                        parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
-                                        style={{ width: '100%' }}
-                                    />
-                                </FormItem>
-                            </div>
-                            <div className="col-xl-4 col-lg-4">
-                                <FormItem label="Số lượng phòng tắm" name="bathRoom">
-                                    <InputNumber
-                                        formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                                        parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
-                                        style={{ width: '100%' }}
-                                    />
-                                </FormItem>
-                            </div>
-                            <div className="col-xl-4 col-lg-4">
+                            <div className="col-xl-6 col-lg-6">
                                 <FormItem label="Diện tích" name="acreage">
                                     <InputNumber
                                         formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
@@ -285,6 +244,25 @@ const ModalItem = (props) => {
                                     />
                                 </FormItem>
                             </div>
+                            <div className="col-xl-6 col-lg-6">
+                                <FormItem label="Số lượng phòng ngủ" name="numberBedroom">
+                                    <InputNumber
+                                        formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                        parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
+                                        style={{ width: '100%' }}
+                                    />
+                                </FormItem>
+                            </div>
+                            <div className="col-xl-6 col-lg-6">
+                                <FormItem label="Số lượng phòng tắm" name="bathRoom">
+                                    <InputNumber
+                                        formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                        parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
+                                        style={{ width: '100%' }}
+                                    />
+                                </FormItem>
+                            </div>
+
                             <div className="col-xl-12 col-lg-12">
                                 <FormItem label="Mô tả" name="description">
                                     <TextArea />
@@ -294,7 +272,7 @@ const ModalItem = (props) => {
                                 <FormItem label="Hình ảnh" name="imageHouses">
                                     <ImageUpload
                                         multiple={true}
-                                        URL={`${API_URL}/UploadFile`}
+                                        URL={`${API_URL}/api/fileupload`}
                                         // headers={{
                                         //     Authorization: `Bearer ${token}`,
                                         // }}

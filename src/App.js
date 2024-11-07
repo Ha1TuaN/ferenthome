@@ -8,7 +8,7 @@ import { useEffect } from 'react';
 
 function App() {
     return (
-        <div className="bg-primary">
+        <div className="bg-light">
             <Routes>
                 <Route path={path.HOME} element={<Home />}>
                     <Route path="*" element={<Homepage />} />
